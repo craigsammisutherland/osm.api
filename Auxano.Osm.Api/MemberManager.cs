@@ -10,13 +10,14 @@ namespace Auxano.Osm.Api
     /// </summary>
     public class MemberManager
     {
-        private readonly CachedData<MembersResponse> cache;
+        private readonly CachedDataSet<MembersResponse> cache;
         private readonly Connection connection;
 
         internal MemberManager(Connection connection)
         {
             this.connection = connection;
-            this.cache = new CachedData<MembersResponse>("ext/members/contact/grid/?action=getMembers", TimeSpan.FromMinutes(1));
+            this.cache = new CachedDataSet<MembersResponse>(
+                () => new CachedData<MembersResponse>("ext/members/contact/grid/?action=getMembers", TimeSpan.FromMinutes(1)));
         }
 
         /// <summary>
@@ -32,7 +33,9 @@ namespace Auxano.Osm.Api
                 ["section_id"] = section.Id,
                 ["term_id"] = term.Id
             };
-            var memberData = await cache.GetAsync(this.connection, values);
+            var memberData = await cache
+                .GetForSectionAndTerm(section, term)
+                .GetAsync(this.connection, values);
             var members = memberData.data
                 .Values
                 .Select(m => new Member(
