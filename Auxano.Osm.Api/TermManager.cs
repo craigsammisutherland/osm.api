@@ -9,14 +9,11 @@ namespace Auxano.Osm.Api
     /// </summary>
     public class TermManager
     {
-        private readonly CachedDataSet<Dictionary<string, TermResponse[]>> cache;
         private readonly Connection connection;
 
-        internal TermManager(Connection connection, CacheSettings cacheSettings)
+        internal TermManager(Connection connection)
         {
             this.connection = connection;
-            this.cache = new CachedDataSet<Dictionary<string, TermResponse[]>>(
-                () => new CachedData<Dictionary<string, TermResponse[]>>("api.php?action=getTerms", cacheSettings));
         }
 
         /// <summary>
@@ -26,9 +23,7 @@ namespace Auxano.Osm.Api
         /// <returns>A list of all the terms.</returns>
         public async Task<TermArray> ListForSectionAsync(Section section)
         {
-            var parsedTerms = await cache
-                .GetForSection(section)
-                .GetAsync(this.connection, null);
+            var parsedTerms = await connection.PostAsync<Dictionary<string, TermResponse[]>>("api.php?action=getTerms", null);
             TermResponse[] termsToConvert;
             if (parsedTerms.TryGetValue(section.Id, out termsToConvert))
             {

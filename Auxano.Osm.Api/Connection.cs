@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Auxano.Osm.Api
 {
@@ -42,6 +43,24 @@ namespace Auxano.Osm.Api
         public Connection AddAuthorisation(string newUserId, string newSecret)
         {
             return new Connection(this.apiId, this.token, newUserId, newSecret);
+        }
+
+        public async Task<TData> PostAsync<TData>(string url, string query, IDictionary<string, string> values)
+        {
+            var fullUrl = url +
+                (string.IsNullOrEmpty(query)
+                    ? string.Empty
+                    : ((url.Contains("?") ? "&" : "?") + query));
+            var response = await this.PostAsync(fullUrl, values);
+            var data = JsonConvert.DeserializeObject<TData>(response);
+            return data;
+        }
+
+        public async Task<TData> PostAsync<TData>(string url, IDictionary<string, string> values)
+        {
+            var response = await this.PostAsync(url, values);
+            var data = JsonConvert.DeserializeObject<TData>(response);
+            return data;
         }
 
         public async Task<string> PostAsync(string url, IDictionary<string, string> values)

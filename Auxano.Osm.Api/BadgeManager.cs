@@ -9,14 +9,11 @@ namespace Auxano.Osm.Api
     /// </summary>
     public class BadgeManager
     {
-        private readonly Dictionary<int, CachedDataSet<BadgesStructureResponse>> caches = new Dictionary<int, CachedDataSet<BadgesStructureResponse>>();
-        private readonly CacheSettings cacheSettings;
         private readonly Connection connection;
 
-        internal BadgeManager(Connection connection, CacheSettings cacheSettings)
+        internal BadgeManager(Connection connection)
         {
             this.connection = connection;
-            this.cacheSettings = cacheSettings;
         }
 
         /// <summary>
@@ -37,7 +34,8 @@ namespace Auxano.Osm.Api
                 ["section_id"] = section.Id
             };
             var query = string.Join("&", Utils.EncodeQueryValues(values));
-            var badgeData = await this.RetrieveBadgeDataFromServer(section, badgeType, term, query);
+            var badgeData = await connection.PostAsync<BadgesStructureResponse>(
+                "ext/badges/records/?action=getBadgeStructureByType", query, null);
             var fullData = from details in badgeData.details
                            join structure in badgeData.structure on details.Key equals structure.Key
                            select new { details = details.Value, structure = structure.Value };
@@ -62,21 +60,6 @@ namespace Auxano.Osm.Api
                 .SelectMany(s => s.Rows);
             var tasks = rows.Select(r => new BadgeTask(r.field, r.name, r.tooltip, null));
             return tasks;
-        }
-
-        private async Task<BadgesStructureResponse> RetrieveBadgeDataFromServer(Section section, int badgeType, Term term, string query)
-        {
-            CachedDataSet<BadgesStructureResponse> cache;
-            if (!this.caches.TryGetValue(badgeType, out cache))
-            {
-                cache = new CachedDataSet<BadgesStructureResponse>(
-                    () => new CachedData<BadgesStructureResponse>("ext/badges/records/?action=getBadgeStructureByType", this.cacheSettings));
-                this.caches[badgeType] = cache;
-            }
-
-            return await cache
-                .GetForSectionAndTerm(section, term)
-                .GetAsync(this.connection, query, null);
         }
 
         private class BadgeDetails

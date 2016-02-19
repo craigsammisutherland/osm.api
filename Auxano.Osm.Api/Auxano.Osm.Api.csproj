@@ -43,9 +43,6 @@
   <ItemGroup>
     <Compile Include="Badge.cs" />
     <Compile Include="BadgeTask.cs" />
-    <Compile Include="CachedData.cs" />
-    <Compile Include="CachedDataSet.cs" />
-    <Compile Include="CacheSettings.cs" />
     <Compile Include="Group.cs" />
     <Compile Include="GroupManager.cs" />
     <Compile Include="IAuthorisation.cs" />
