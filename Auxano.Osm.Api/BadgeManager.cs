@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,11 +10,13 @@ namespace Auxano.Osm.Api
     public class BadgeManager
     {
         private readonly Dictionary<int, CachedDataSet<BadgesStructureResponse>> caches = new Dictionary<int, CachedDataSet<BadgesStructureResponse>>();
+        private readonly CacheSettings cacheSettings;
         private readonly Connection connection;
 
-        internal BadgeManager(Connection connection)
+        internal BadgeManager(Connection connection, CacheSettings cacheSettings)
         {
             this.connection = connection;
+            this.cacheSettings = cacheSettings;
         }
 
         /// <summary>
@@ -69,7 +70,7 @@ namespace Auxano.Osm.Api
             if (!this.caches.TryGetValue(badgeType, out cache))
             {
                 cache = new CachedDataSet<BadgesStructureResponse>(
-                    () => new CachedData<BadgesStructureResponse>("ext/badges/records/?action=getBadgeStructureByType", TimeSpan.FromMinutes(1)));
+                    () => new CachedData<BadgesStructureResponse>("ext/badges/records/?action=getBadgeStructureByType", this.cacheSettings));
                 this.caches[badgeType] = cache;
             }
 

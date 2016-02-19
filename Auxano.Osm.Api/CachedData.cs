@@ -7,21 +7,21 @@ namespace Auxano.Osm.Api
 {
     internal class CachedData<TData>
     {
-        private readonly TimeSpan expiryDuration;
+        private readonly CacheSettings cacheSettings;
         private readonly Func<Connection, string, IDictionary<string, string>, Task<TData>> getter;
         private TData cachedValue;
         private DateTime expiryTime = DateTime.MinValue;
 
-        public CachedData(Func<Connection, string, IDictionary<string, string>, Task<TData>> getter, TimeSpan expiryDuration)
+        public CachedData(Func<Connection, string, IDictionary<string, string>, Task<TData>> getter, CacheSettings cacheSettings)
         {
             this.getter = getter;
-            this.expiryDuration = expiryDuration;
+            this.cacheSettings = cacheSettings;
         }
 
-        public CachedData(string url, TimeSpan expiryDuration)
+        public CachedData(string url, CacheSettings cacheSettings)
         {
             this.getter = async (connection, query, values) => await RetrieveFromServer(connection, url, query, values);
-            this.expiryDuration = expiryDuration;
+            this.cacheSettings = cacheSettings;
         }
 
         public async Task<TData> GetAsync(Connection connection, IDictionary<string, string> values)
@@ -30,7 +30,7 @@ namespace Auxano.Osm.Api
             if (now > this.expiryTime)
             {
                 this.cachedValue = await this.getter(connection, null, values);
-                this.expiryTime = now.Add(this.expiryDuration);
+                this.expiryTime = now.Add(this.cacheSettings.CacheDuration);
             }
 
             return this.cachedValue;
@@ -42,7 +42,7 @@ namespace Auxano.Osm.Api
             if (now > this.expiryTime)
             {
                 this.cachedValue = await this.getter(connection, query, values);
-                this.expiryTime = now.Add(this.expiryDuration);
+                this.expiryTime = now.Add(this.cacheSettings.CacheDuration);
             }
 
             return this.cachedValue;

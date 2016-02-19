@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,11 +12,11 @@ namespace Auxano.Osm.Api
         private readonly CachedDataSet<Dictionary<string, TermResponse[]>> cache;
         private readonly Connection connection;
 
-        internal TermManager(Connection connection)
+        internal TermManager(Connection connection, CacheSettings cacheSettings)
         {
             this.connection = connection;
             this.cache = new CachedDataSet<Dictionary<string, TermResponse[]>>(
-                () => new CachedData<Dictionary<string, TermResponse[]>>("api.php?action=getTerms", TimeSpan.FromMinutes(1)));
+                () => new CachedData<Dictionary<string, TermResponse[]>>("api.php?action=getTerms", cacheSettings));
         }
 
         /// <summary>

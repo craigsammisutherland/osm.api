@@ -11,6 +11,7 @@ namespace Auxano.Osm.Api
     public class Manager
     {
         private readonly Lazy<BadgeManager> badge;
+        private readonly CacheSettings cacheSettings = new CacheSettings();
         private readonly Lazy<GroupManager> group;
         private readonly Lazy<MemberManager> member;
         private readonly Lazy<TermManager> term;
@@ -42,10 +43,10 @@ namespace Auxano.Osm.Api
 
         private Manager()
         {
-            this.badge = new Lazy<BadgeManager>(() => new BadgeManager(this.connection));
+            this.badge = new Lazy<BadgeManager>(() => new BadgeManager(this.connection, this.cacheSettings));
             this.group = new Lazy<GroupManager>(() => new GroupManager(this.connection));
-            this.member = new Lazy<MemberManager>(() => new MemberManager(this.connection));
-            this.term = new Lazy<TermManager>(() => new TermManager(this.connection));
+            this.member = new Lazy<MemberManager>(() => new MemberManager(this.connection, this.cacheSettings));
+            this.term = new Lazy<TermManager>(() => new TermManager(this.connection, this.cacheSettings));
         }
 
         /// <summary>
@@ -66,6 +67,14 @@ namespace Auxano.Osm.Api
                 this.EnsureAuthorised();
                 return this.badge.Value;
             }
+        }
+
+        /// <summary>
+        /// The settings for controlling the caches.
+        /// </summary>
+        public CacheSettings CacheSettings
+        {
+            get { return this.cacheSettings; }
         }
 
         /// <summary>

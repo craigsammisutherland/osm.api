@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,11 +12,11 @@ namespace Auxano.Osm.Api
         private readonly CachedDataSet<MembersResponse> cache;
         private readonly Connection connection;
 
-        internal MemberManager(Connection connection)
+        internal MemberManager(Connection connection, CacheSettings cacheSettings)
         {
             this.connection = connection;
             this.cache = new CachedDataSet<MembersResponse>(
-                () => new CachedData<MembersResponse>("ext/members/contact/grid/?action=getMembers", TimeSpan.FromMinutes(1)));
+                () => new CachedData<MembersResponse>("ext/members/contact/grid/?action=getMembers", cacheSettings));
         }
 
         /// <summary>
