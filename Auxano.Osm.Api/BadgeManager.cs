@@ -10,13 +10,12 @@ namespace Auxano.Osm.Api
     /// </summary>
     public class BadgeManager
     {
-        private readonly CachedData<BadgesStructureResponse> cache;
+        private readonly Dictionary<int, CachedData<BadgesStructureResponse>> caches = new Dictionary<int, CachedData<BadgesStructureResponse>>();
         private readonly Connection connection;
 
         internal BadgeManager(Connection connection)
         {
             this.connection = connection;
-            this.cache = new CachedData<BadgesStructureResponse>("ext/badges/records/?action=getBadgeStructureByType", TimeSpan.FromMinutes(0));
         }
 
         /// <summary>
@@ -26,18 +25,18 @@ namespace Auxano.Osm.Api
         /// <param name="term">The term to list the badges for.</param>
         /// <param name="badgeType">The type of badge to list.</param>
         /// <returns>A list of all the badges in the section.</returns>
-        public async Task<IEnumerable<Badge>> ListForSectionAsync(Section section, BadgeType badgeType, Term term)
+        public async Task<IEnumerable<Badge>> ListForSectionAsync(Section section, int badgeType, Term term)
         {
             var values = new Dictionary<string, string>
             {
                 ["a"] = "1",
                 ["section"] = section.Type,
-                ["type_id"] = ((int)badgeType).ToString(),
+                ["type_id"] = badgeType.ToString(),
                 ["term_id"] = term.Id,
                 ["section_id"] = section.Id
             };
             var query = string.Join("&", Utils.EncodeQueryValues(values));
-            var badgeData = await cache.GetAsync(this.connection, query, null);
+            var badgeData = await this.RetrieveBadgeDataFromServer(badgeType, query);
             var fullData = from details in badgeData.details
                            join structure in badgeData.structure on details.Key equals structure.Key
                            select new { details = details.Value, structure = structure.Value };
@@ -50,8 +49,30 @@ namespace Auxano.Osm.Api
                 b.details.picture,
                 section,
                 Utils.ParseDateTime(b.details.created_at).Value,
-                Utils.ParseDateTime(b.details.lastupdated).Value));
+                Utils.ParseDateTime(b.details.lastupdated).Value,
+                ParseTasks(b.structure)));
             return badges;
+        }
+
+        private static IEnumerable<BadgeTask> ParseTasks(BadgeStructure[] structure)
+        {
+            var rows = structure
+                .Skip(1)
+                .SelectMany(s => s.Rows);
+            var tasks = rows.Select(r => new BadgeTask(r.field, r.name, r.tooltip, null));
+            return tasks;
+        }
+
+        private async Task<BadgesStructureResponse> RetrieveBadgeDataFromServer(int badgeType, string query)
+        {
+            CachedData<BadgesStructureResponse> cache;
+            if (!this.caches.TryGetValue(badgeType, out cache))
+            {
+                cache = new CachedData<BadgesStructureResponse>("ext/badges/records/?action=getBadgeStructureByType", TimeSpan.FromMinutes(1));
+                this.caches[badgeType] = cache;
+            }
+
+            return await cache.GetAsync(this.connection, query, null);
         }
 
         private class BadgeDetails

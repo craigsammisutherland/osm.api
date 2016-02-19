@@ -8,12 +8,12 @@ namespace Auxano.Osm.TestHarness
 {
     internal class Program
     {
-        private static void ListBadges(Manager manager, Section section, TermArray terms, BadgeType badgeType)
+        private static void ListBadges(Manager manager, Section section, TermArray terms, int badgeType)
         {
             var badges = manager.Badge.ListForSectionAsync(section, badgeType, terms.Current).Result;
             foreach (var badge in badges)
             {
-                Console.WriteLine("Badge: " + badge.Name + " [" + badgeType + "]");
+                Console.WriteLine("Badge: " + badge.Name);
             }
         }
 
@@ -59,8 +59,8 @@ namespace Auxano.Osm.TestHarness
                                 Console.WriteLine("Member: " + member.FamilyName + ", " + member.FirstName);
                             }
 
-                            ListBadges(manager, section, terms, BadgeType.AwardScheme);
-                            ListBadges(manager, section, terms, BadgeType.PersonalAchievement);
+                            ListBadges(manager, section, terms, 1);
+                            ListBadges(manager, section, terms, 2);
                         }
                     }
                     Console.WriteLine("...finished");

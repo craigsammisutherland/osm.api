@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Badge.cs" />
-    <Compile Include="BadgeType.cs" />
+    <Compile Include="BadgeTask.cs" />
     <Compile Include="CachedData.cs" />
     <Compile Include="Group.cs" />
     <Compile Include="GroupManager.cs" />

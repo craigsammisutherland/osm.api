@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Auxano.Osm.Api
 {
@@ -13,6 +16,7 @@ namespace Auxano.Osm.Api
         private readonly string name;
         private readonly string pictureUrl;
         private readonly Section section;
+        private readonly ImmutableArray<BadgeTask> tasks;
         private readonly string version;
         private readonly DateTime whenAdded;
         private readonly DateTime whenUpdated;
@@ -29,7 +33,8 @@ namespace Auxano.Osm.Api
         /// <param name="version">The version of this badge.</param>
         /// <param name="whenAdded">When the badge was added.</param>
         /// <param name="whenUpdated">When the badge was last updated.</param>
-        public Badge(string id, string version, string name, string description, string group, string pictureUrl, Section section, DateTime whenAdded, DateTime whenUpdated)
+        /// <param name="tasks">The tasks required to earn this badge.</param>
+        public Badge(string id, string version, string name, string description, string group, string pictureUrl, Section section, DateTime whenAdded, DateTime whenUpdated, IEnumerable<BadgeTask> tasks)
         {
             this.id = id;
             this.name = name;
@@ -40,6 +45,9 @@ namespace Auxano.Osm.Api
             this.version = version;
             this.whenAdded = whenAdded;
             this.whenUpdated = whenUpdated;
+            this.tasks = tasks
+                .Select(t => t.SetBadge(this))
+                .ToImmutableArray();
         }
 
         /// <summary>
