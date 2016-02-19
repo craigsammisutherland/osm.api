@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Auxano.Osm.Api/bin/Debug
+/Auxano.Osm.Api/obj/Debug
+/Auxano.Osm.TestHarness/bin/Debug
+/Auxano.Osm.TestHarness/obj/Debug
+/packages/Newtonsoft.Json.8.0.2
+/Auxano.Osm.Api/project.lock.json

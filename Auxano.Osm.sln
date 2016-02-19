@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxano.Osm.TestHarness", "Auxano.Osm.TestHarness\Auxano.Osm.TestHarness.csproj", "{AC33C85E-2BD7-4C1C-8A98-F4887B566073}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxano.Osm.Api", "Auxano.Osm.Api\Auxano.Osm.Api.csproj", "{60D8181B-3FD9-41CC-B22A-0CE0F654578D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC33C85E-2BD7-4C1C-8A98-F4887B566073}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC33C85E-2BD7-4C1C-8A98-F4887B566073}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC33C85E-2BD7-4C1C-8A98-F4887B566073}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC33C85E-2BD7-4C1C-8A98-F4887B566073}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60D8181B-3FD9-41CC-B22A-0CE0F654578D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60D8181B-3FD9-41CC-B22A-0CE0F654578D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60D8181B-3FD9-41CC-B22A-0CE0F654578D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60D8181B-3FD9-41CC-B22A-0CE0F654578D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
