@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Auxano.Osm.Api;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 
 namespace Auxano.Osm.DataExtractor
@@ -28,6 +29,7 @@ namespace Auxano.Osm.DataExtractor
 
         public ViewModel()
         {
+            this.BrowseCommand = new ActionCommand(this.Browse);
             this.GoCommand = new ActionCommand(this.Go);
             this.Exceptions = new ObservableCollection<ErrorReport>();
             this.Reports = new ObservableCollection<Report>(Report.All());
@@ -50,7 +52,9 @@ namespace Auxano.Osm.DataExtractor
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public ActionCommand BrowseCommand { get; private set; }
         public ObservableCollection<ErrorReport> Exceptions { get; private set; }
+
         public ActionCommand GoCommand { get; private set; }
 
         public ObservableCollection<Group> Groups { get; private set; }
@@ -188,6 +192,23 @@ namespace Auxano.Osm.DataExtractor
             return manager;
         }
 
+        private void Browse(object obj)
+        {
+            var dialog = new SaveFileDialog
+            {
+                CheckPathExists = true,
+                DereferenceLinks = true,
+                InitialDirectory = Path.GetDirectoryName(this.SelectedFile),
+                Filter = "Reports (*" + this.selectedReport.Extension + ")|*" + this.selectedReport.Extension + "|All files (*.*)|*.*",
+                FilterIndex = 1,
+                OverwritePrompt = true,
+                ValidateNames = true,
+                Title = "Select Filename to Save the Report To",
+                FileName = this.selectedFile
+            };
+            if (dialog.ShowDialog().GetValueOrDefault()) this.SelectedFile = dialog.FileName;
+        }
+
         private void DoneStatus(object obj)
         {
             this.Status = this.SelectedReport.Name + " complete";
@@ -307,6 +328,7 @@ namespace Auxano.Osm.DataExtractor
                 && (this.selectedReport != null)
                 && (this.selectedSection != null)
                 && (this.selectedTerm != null);
+            this.BrowseCommand.IsEnabled = !this.isBusy;
         }
     }
 }
