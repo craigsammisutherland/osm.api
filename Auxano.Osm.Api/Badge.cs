@@ -109,6 +109,14 @@ namespace Auxano.Osm.Api
         }
 
         /// <summary>
+        /// The tasks to complete the badge.
+        /// </summary>
+        public IEnumerable<BadgeTask> Tasks
+        {
+            get { return this.tasks; }
+        }
+
+        /// <summary>
         /// The version of the badge.
         /// </summary>
         public string Version

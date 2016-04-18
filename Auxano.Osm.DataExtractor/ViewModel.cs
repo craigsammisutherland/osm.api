@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,8 @@ namespace Auxano.Osm.DataExtractor
         private readonly Dictionary<string, TermArray> cachedTerms = new Dictionary<string, TermArray>();
         private readonly Manager manager;
         private bool isBusy;
+        private string lastFileName;
+        private string selectedFile;
         private Group selectedGroup;
         private Report selectedReport;
         private Section selectedSection;
@@ -26,6 +29,7 @@ namespace Auxano.Osm.DataExtractor
         public ViewModel()
         {
             this.GoCommand = new ActionCommand(this.Go);
+            this.Exceptions = new ObservableCollection<Exception>();
             this.Reports = new ObservableCollection<Report>(Report.All());
             this.Groups = new ObservableCollection<Group>();
             this.Sections = new ObservableCollection<Section>();
@@ -46,6 +50,7 @@ namespace Auxano.Osm.DataExtractor
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public ObservableCollection<Exception> Exceptions { get; private set; }
         public ActionCommand GoCommand { get; private set; }
 
         public ObservableCollection<Group> Groups { get; private set; }
@@ -57,12 +62,23 @@ namespace Auxano.Osm.DataExtractor
             {
                 this.isBusy = value;
                 this.FirePropertyChanged();
+                this.UpdateGoStatus();
             }
         }
 
         public ObservableCollection<Report> Reports { get; private set; }
 
         public ObservableCollection<Section> Sections { get; private set; }
+
+        public string SelectedFile
+        {
+            get { return this.selectedFile; }
+            set
+            {
+                this.selectedFile = value;
+                this.FirePropertyChanged();
+            }
+        }
 
         public Group SelectedGroup
         {
@@ -85,6 +101,7 @@ namespace Auxano.Osm.DataExtractor
 
                 this.SelectedSection = this.Sections.FirstOrDefault();
                 this.UpdateGoStatus();
+                this.GenerateFileName();
             }
         }
 
@@ -96,6 +113,7 @@ namespace Auxano.Osm.DataExtractor
                 this.selectedReport = value;
                 this.FirePropertyChanged();
                 this.UpdateGoStatus();
+                this.GenerateFileName();
             }
         }
 
@@ -146,6 +164,7 @@ namespace Auxano.Osm.DataExtractor
 
                 this.cachedTerms[value.Section.Id] = this.cachedTerms[value.Section.Id].ChangeCurrentTerm(value);
                 this.UpdateGoStatus();
+                this.GenerateFileName();
             }
         }
 
@@ -183,8 +202,34 @@ namespace Auxano.Osm.DataExtractor
 
         private async Task<object> Generate()
         {
-            await this.SelectedReport.Generate(this, this.manager);
+            var fileName = await this.SelectedReport.Generate(this, this.manager);
+            Process.Start(fileName);
             return null;
+        }
+
+        private void GenerateFileName()
+        {
+            if ((this.SelectedReport == null)
+                    || (this.selectedGroup == null)
+                    || (this.selectedSection == null)
+                    || (this.SelectedTerm == null))
+            {
+                return;
+            }
+
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                string.Join("-", new[] {
+                    this.SelectedReport.Name,
+                    this.selectedGroup.Name,
+                    this.selectedSection.Name,
+                    this.SelectedTerm.Name
+                }) + this.SelectedReport.Extension);
+            if (string.IsNullOrEmpty(this.selectedFile) || (this.selectedFile == this.lastFileName))
+            {
+                this.SelectedFile = path;
+            }
+
+            this.lastFileName = path;
         }
 
         private void Go(object arg)
@@ -223,12 +268,14 @@ namespace Auxano.Osm.DataExtractor
 
             this.SelectedTerm = terms.Current;
             this.UpdateGoStatus();
+            this.GenerateFileName();
         }
 
         private void StartBackgroundWork(Func<Task<object>> onWork, Action<object> onDone)
         {
             this.IsBusy = true;
             object result = null;
+            this.Exceptions.Clear();
             Task.Run(async () =>
             {
                 result = await onWork();
@@ -237,7 +284,11 @@ namespace Auxano.Osm.DataExtractor
                 this.IsBusy = false;
                 if (t.Exception != null)
                 {
-                    this.Status = "An unexpected error has occurred: " + t.Exception.InnerException.Message;
+                    this.Status = "An unexpected error has occurred!";
+                    foreach (var exception in t.Exception.Flatten().InnerExceptions)
+                    {
+                        this.Exceptions.Add(exception);
+                    }
                 }
                 else
                 {
@@ -245,6 +296,7 @@ namespace Auxano.Osm.DataExtractor
                 }
 
                 this.UpdateGoStatus();
+                this.GenerateFileName();
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 

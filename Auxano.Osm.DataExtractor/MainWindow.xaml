@@ -27,6 +27,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="TextBlock">
@@ -58,5 +59,12 @@
         </StackPanel>
 
         <TextBlock HorizontalAlignment="Center" Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Status}" />
+        <TreeView Grid.Row="7" Grid.ColumnSpan="3" Margin="4" ItemsSource="{Binding Exceptions}">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding InnerException}">
+                    <TextBlock Text="{Binding Message}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
     </Grid>
 </Window>

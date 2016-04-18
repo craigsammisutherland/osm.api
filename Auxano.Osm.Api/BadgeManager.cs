@@ -73,7 +73,7 @@ namespace Auxano.Osm.Api
         /// <param name="badge">The badge to list.</param>
         /// <param name="term">The current term for the list.</param>
         /// <returns>A list of the progress for all the members in the section for the badge.</returns>
-        public async Task<IEnumerable<BadgeProgress>> ListProgressForBadgeAsync(Section section, Badge badge, Term term)
+        public async Task<BadgeProgressReport> ListProgressForBadgeAsync(Section section, Badge badge, Term term)
         {
             var values = new Dictionary<string, string>
             {
@@ -86,9 +86,9 @@ namespace Auxano.Osm.Api
             var query = string.Join("&", Utils.EncodeQueryValues(values));
             var badgeData = await connection.PostAsync<BadgeReportResponse>(
                 "ext/badges/records/?action=getBadgeRecords", query, null);
-            var fullData = (from item in badgeData.items
-                            select ParseProgress(item, badge, section)).ToArray();
-            return fullData;
+            var fullData = from item in badgeData.items
+                           select ParseProgress(item, badge, section);
+            return new BadgeProgressReport(badge, fullData);
         }
 
         private static string GetProgressValue(Dictionary<string, string> item, string key)
