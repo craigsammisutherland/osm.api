@@ -9,3 +9,6 @@
 /Auxano.Osm.TestHarness/obj/Debug
 /packages/Newtonsoft.Json.8.0.2
 /Auxano.Osm.Api/project.lock.json
+/Auxano.Osm.DataExtractor/bin/Debug
+/Auxano.Osm.DataExtractor/obj/Debug
+/packages
