@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Badge.cs" />
+    <Compile Include="BadgeProgress.cs" />
     <Compile Include="BadgeTask.cs" />
     <Compile Include="Group.cs" />
     <Compile Include="GroupManager.cs" />

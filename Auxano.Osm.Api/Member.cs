@@ -11,6 +11,7 @@ namespace Auxano.Osm.Api
         private readonly string firstName;
         private readonly string id;
         private readonly bool isActive;
+        private readonly bool isLoaded;
         private readonly string patrol;
         private readonly string role;
         private readonly Section section;
@@ -20,7 +21,7 @@ namespace Auxano.Osm.Api
         private readonly DateTime? whenStarted;
 
         /// <summary>
-        /// Initialises a new member.
+        /// Initialises a new member with full details.
         /// </summary>
         /// <param name="id">The identifier of the member.</param>
         /// <param name="familyName">The member's family name.</param>
@@ -45,6 +46,22 @@ namespace Auxano.Osm.Api
             this.whenStarted = whenStarted;
             this.whenEnded = whenEnded;
             this.isActive = isActive;
+            this.section = section;
+            this.isLoaded = true;
+        }
+
+        /// <summary>
+        /// Initialises a new member with partial details.
+        /// </summary>
+        /// <param name="id">The identifier of the member.</param>
+        /// <param name="familyName">The member's family name.</param>
+        /// <param name="firstName">The member's first name.</param>
+        /// <param name="section">The section the member belongs to.</param>
+        public Member(string id, string familyName, string firstName, Section section)
+        {
+            this.id = id;
+            this.familyName = familyName;
+            this.firstName = firstName;
             this.section = section;
         }
 
@@ -78,6 +95,14 @@ namespace Auxano.Osm.Api
         public bool IsActive
         {
             get { return this.isActive; }
+        }
+
+        /// <summary>
+        /// A flag indicating whether the member has been fully loaded.
+        /// </summary>
+        public bool IsLoaded
+        {
+            get { return this.isLoaded; }
         }
 
         /// <summary>

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Auxano.Osm.Api;
 using Newtonsoft.Json;
 
@@ -8,13 +10,24 @@ namespace Auxano.Osm.TestHarness
 {
     internal class Program
     {
-        private static void ListBadges(Manager manager, Section section, TermArray terms, int badgeType)
+        private static IEnumerable<Badge> ListBadges(Manager manager, Section section, TermArray terms, int badgeType)
         {
             var badges = manager.Badge.ListForSectionAsync(section, badgeType, terms.Current).Result;
             foreach (var badge in badges)
             {
                 Console.WriteLine("Badge: " + badge.Name);
             }
+
+            var first = badges.FirstOrDefault();
+            if (first == null) return badges;
+
+            var progress = manager.Badge.ListProgressForBadgeAsync(section, first, terms.Current).Result;
+            foreach (var item in progress)
+            {
+                Console.WriteLine(item.Member.FamilyName + ", " + item.Member.FirstName + " -> " + (item.IsAwarded ? "Awarded" : string.Empty));
+            }
+
+            return badges;
         }
 
         private static void Main(string[] args)
