@@ -29,10 +29,10 @@ namespace Auxano.Osm.Api
             {
                 var terms = termsToConvert
                     .Select(t => new Term(t.name, t.termid, Utils.ParseDate(t.startdate).Value, Utils.ParseDate(t.enddate).Value, section));
-                return new TermArray(terms);
+                return new TermArray(section, terms);
             }
 
-            return new TermArray(new Term[0]);
+            return new TermArray(section, new Term[0]);
         }
 
         private class TermResponse
