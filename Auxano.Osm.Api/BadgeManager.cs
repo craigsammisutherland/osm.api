@@ -34,15 +34,15 @@ namespace Auxano.Osm.Api
         /// </summary>
         /// <param name="section">The section to list the badges for.</param>
         /// <param name="term">The term to list the badges for.</param>
-        /// <param name="badgeType">The type of badge to list.</param>
+        /// <param name="category">The category of badge to list.</param>
         /// <returns>A list of all the badges in the section.</returns>
-        public async Task<IEnumerable<Badge>> ListForSectionAsync(Section section, int badgeType, Term term)
+        public async Task<IEnumerable<Badge>> ListForSectionAsync(Section section, int category, Term term)
         {
             var values = new Dictionary<string, string>
             {
                 ["a"] = "1",
                 ["section"] = section.Type,
-                ["type_id"] = badgeType.ToString(),
+                ["type_id"] = category.ToString(),
                 ["term_id"] = term.Id,
                 ["section_id"] = section.Id
             };
@@ -55,6 +55,7 @@ namespace Auxano.Osm.Api
             var badges = fullData.Select(b => new Badge(
                 b.details.badge_id,
                 b.details.badge_version,
+                category,
                 b.details.name,
                 b.details.description,
                 b.details.group_name,

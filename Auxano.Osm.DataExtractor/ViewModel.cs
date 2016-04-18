@@ -29,7 +29,7 @@ namespace Auxano.Osm.DataExtractor
         public ViewModel()
         {
             this.GoCommand = new ActionCommand(this.Go);
-            this.Exceptions = new ObservableCollection<Exception>();
+            this.Exceptions = new ObservableCollection<ErrorReport>();
             this.Reports = new ObservableCollection<Report>(Report.All());
             this.Groups = new ObservableCollection<Group>();
             this.Sections = new ObservableCollection<Section>();
@@ -38,7 +38,7 @@ namespace Auxano.Osm.DataExtractor
             if (File.Exists(Path.Combine(Environment.CurrentDirectory, "settings.json")))
             {
                 this.manager = ReadSettings();
-                this.Status = "Loading initial data, please wait...";
+                this.Status = "Retrieving group and section details, please wait...";
                 this.StartBackgroundWork(async () => await InitialData.LoadAsync(this.manager), this.LoadSettings);
             }
             else
@@ -50,7 +50,7 @@ namespace Auxano.Osm.DataExtractor
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<Exception> Exceptions { get; private set; }
+        public ObservableCollection<ErrorReport> Exceptions { get; private set; }
         public ActionCommand GoCommand { get; private set; }
 
         public ObservableCollection<Group> Groups { get; private set; }
@@ -190,7 +190,7 @@ namespace Auxano.Osm.DataExtractor
 
         private void DoneStatus(object obj)
         {
-            this.Status = "Report generation complete";
+            this.Status = this.SelectedReport.Name + " complete";
         }
 
         private void FirePropertyChanged([CallerMemberName] string memberName = null)
@@ -234,7 +234,7 @@ namespace Auxano.Osm.DataExtractor
 
         private void Go(object arg)
         {
-            this.Status = "Generating report...";
+            this.Status = "Generating " + this.SelectedReport.Name + ", please wait...";
             this.StartBackgroundWork(this.Generate, this.DoneStatus);
         }
 
@@ -246,7 +246,7 @@ namespace Auxano.Osm.DataExtractor
             var data = output as InitialData;
             if (data == null)
             {
-                this.Status = "Unable to retrieve initial data";
+                this.Status = "Unable to retrieve group and section details";
                 return;
             }
             if (data.Terms != null) this.cachedTerms.Add(data.Terms.Section.Id, data.Terms);
@@ -287,7 +287,7 @@ namespace Auxano.Osm.DataExtractor
                     this.Status = "An unexpected error has occurred!";
                     foreach (var exception in t.Exception.Flatten().InnerExceptions)
                     {
-                        this.Exceptions.Add(exception);
+                        this.Exceptions.Add(new ErrorReport(exception));
                     }
                 }
                 else

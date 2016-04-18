@@ -10,6 +10,7 @@ namespace Auxano.Osm.Api
     /// </summary>
     public class Badge
     {
+        private readonly int category;
         private readonly string description;
         private readonly string group;
         private readonly string id;
@@ -25,6 +26,7 @@ namespace Auxano.Osm.Api
         /// Initialises a new instance of a <see cref="Badge"/>.
         /// </summary>
         /// <param name="id">The identifier of the badge.</param>
+        /// <param name="category">The category of the badge.</param>
         /// <param name="name">The name of the badge.</param>
         /// <param name="description">A description of the badge.</param>
         /// <param name="group">Which group of badges this badges belongs to.</param>
@@ -34,9 +36,10 @@ namespace Auxano.Osm.Api
         /// <param name="whenAdded">When the badge was added.</param>
         /// <param name="whenUpdated">When the badge was last updated.</param>
         /// <param name="tasks">The tasks required to earn this badge.</param>
-        public Badge(string id, string version, string name, string description, string group, string pictureUrl, Section section, DateTime whenAdded, DateTime whenUpdated, IEnumerable<BadgeTask> tasks)
+        public Badge(string id, string version, int category, string name, string description, string group, string pictureUrl, Section section, DateTime whenAdded, DateTime whenUpdated, IEnumerable<BadgeTask> tasks)
         {
             this.id = id;
+            this.category = category;
             this.name = name;
             this.description = description;
             this.group = group;
@@ -48,6 +51,14 @@ namespace Auxano.Osm.Api
             this.tasks = tasks
                 .Select(t => t.SetBadge(this))
                 .ToImmutableArray();
+        }
+
+        /// <summary>
+        /// The category of the badge.
+        /// </summary>
+        public int Category
+        {
+            get { return this.category; }
         }
 
         /// <summary>

@@ -60,8 +60,13 @@
 
         <TextBlock HorizontalAlignment="Center" Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Status}" />
         <TreeView Grid.Row="7" Grid.ColumnSpan="3" Margin="4" ItemsSource="{Binding Exceptions}">
+            <TreeView.Resources>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True" />
+                </Style>
+            </TreeView.Resources>
             <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding InnerException}">
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                     <TextBlock Text="{Binding Message}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>

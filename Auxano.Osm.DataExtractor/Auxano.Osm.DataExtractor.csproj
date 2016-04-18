@@ -70,7 +70,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ActionCommand.cs" />
+    <Compile Include="BadgeAchievementReport.cs" />
     <Compile Include="BadgeProgressReport.cs" />
+    <Compile Include="ErrorReport.cs" />
     <Compile Include="InitialData.cs" />
     <Compile Include="InvertBooleanConverter.cs" />
     <Compile Include="Report.cs" />
