@@ -64,6 +64,7 @@
     <Compile Include="ErrorReport.cs" />
     <Compile Include="InitialData.cs" />
     <Compile Include="InvertBooleanConverter.cs" />
+    <Compile Include="MemberSelection.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModel.cs" />
     <Page Include="MainWindow.xaml">

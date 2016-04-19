@@ -14,9 +14,12 @@ namespace Auxano.Osm.AwardProgress
     public class ViewModel
         : INotifyPropertyChanged
     {
+        private readonly Dictionary<string, Badge[]> cachedBadges = new Dictionary<string, Badge[]>();
+        private readonly Dictionary<string, Member[]> cachedMembers = new Dictionary<string, Member[]>();
         private readonly Dictionary<string, TermArray> cachedTerms = new Dictionary<string, TermArray>();
         private readonly Manager manager;
         private bool isBusy;
+        private Badge selectedBadge;
         private Group selectedGroup;
         private Section selectedSection;
         private Term selectedTerm;
@@ -25,10 +28,12 @@ namespace Auxano.Osm.AwardProgress
         public ViewModel()
         {
             this.GoCommand = new ActionCommand(this.Go);
+            this.Members = new ObservableCollection<MemberSelection>();
             this.Exceptions = new ObservableCollection<ErrorReport>();
             this.Groups = new ObservableCollection<Group>();
             this.Sections = new ObservableCollection<Section>();
             this.Terms = new ObservableCollection<Term>();
+            this.Badges = new ObservableCollection<Badge>();
             if (File.Exists(Path.Combine(Environment.CurrentDirectory, "settings.json")))
             {
                 this.manager = ReadSettings();
@@ -44,10 +49,9 @@ namespace Auxano.Osm.AwardProgress
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public ObservableCollection<Badge> Badges { get; private set; }
         public ObservableCollection<ErrorReport> Exceptions { get; private set; }
-
         public ActionCommand GoCommand { get; private set; }
-
         public ObservableCollection<Group> Groups { get; private set; }
 
         public bool IsBusy
@@ -64,7 +68,22 @@ namespace Auxano.Osm.AwardProgress
             }
         }
 
+        public ObservableCollection<MemberSelection> Members { get; private set; }
         public ObservableCollection<Section> Sections { get; private set; }
+
+        public Badge SelectedBadge
+        {
+            get
+            {
+                return this.selectedBadge;
+            }
+            set
+            {
+                this.selectedBadge = value;
+                this.FirePropertyChanged();
+                this.UpdateGoStatus();
+            }
+        }
 
         public Group SelectedGroup
         {
@@ -145,6 +164,7 @@ namespace Auxano.Osm.AwardProgress
                 }
 
                 this.cachedTerms[value.Section.Id] = this.cachedTerms[value.Section.Id].ChangeCurrentTerm(value);
+                this.DisplayBadges(() => this.DisplayMembers());
                 this.UpdateGoStatus();
             }
         }
@@ -177,6 +197,34 @@ namespace Auxano.Osm.AwardProgress
             throw new NotImplementedException();
         }
 
+        private void DisplayBadges(Action onCompleted = null)
+        {
+            Badge[] badges;
+            if (this.cachedBadges.TryGetValue(this.selectedTerm.Id, out badges))
+            {
+                this.RefreshBadges(badges, onCompleted);
+            }
+            else
+            {
+                this.Status = "Retrieving list of badges for term, please wait...";
+                this.StartBackgroundWork(this.LoadBadgesForTerm, m => this.RefreshBadges(m, onCompleted));
+            }
+        }
+
+        private void DisplayMembers(Action onCompleted = null)
+        {
+            Member[] members;
+            if (this.cachedMembers.TryGetValue(this.selectedTerm.Id, out members))
+            {
+                this.RefreshMembers(members, onCompleted);
+            }
+            else
+            {
+                this.Status = "Retrieving list of members for term, please wait...";
+                this.StartBackgroundWork(this.LoadMembersForTerm, m => this.RefreshMembers(m, onCompleted));
+            }
+        }
+
         private void FirePropertyChanged([CallerMemberName] string memberName = null)
         {
             if (this.PropertyChanged == null) return;
@@ -184,14 +232,41 @@ namespace Auxano.Osm.AwardProgress
             handler.Invoke(this, new PropertyChangedEventArgs(memberName));
         }
 
-        private Task<object> GenerateAwardProgress()
+        private Task<object> GenerateAwardProgress(Member[] members)
         {
             throw new NotImplementedException();
         }
 
         private void Go(object arg)
         {
-            this.StartBackgroundWork(this.GenerateAwardProgress, this.AwardProgressGenerated);
+            var selectedMembers = this.Members
+                .Where(m => m.Selected)
+                .Select(m => m.Member)
+                .ToArray();
+            if (selectedMembers.Any())
+            {
+                this.StartBackgroundWork(() => this.GenerateAwardProgress(selectedMembers), this.AwardProgressGenerated);
+            }
+            else
+            {
+                this.Status = "Please select the members to generate the award progress reports for";
+            }
+        }
+
+        private async Task<object> LoadBadgesForTerm()
+        {
+            var badges = await this.manager.Badge.ListForSectionAsync(this.selectedSection, 1, this.selectedTerm);
+            var loadedBadges = badges.ToArray();
+            this.cachedBadges[this.selectedTerm.Id] = loadedBadges;
+            return loadedBadges;
+        }
+
+        private async Task<object> LoadMembersForTerm()
+        {
+            var members = await this.manager.Member.ListForSectionAsync(this.selectedSection, this.selectedTerm);
+            var loadedMembers = members.ToArray();
+            this.cachedMembers[this.selectedTerm.Id] = loadedMembers;
+            return loadedMembers;
         }
 
         private void LoadSettings(object output)
@@ -217,13 +292,37 @@ namespace Auxano.Osm.AwardProgress
 
         private void LoadTerms(TermArray terms)
         {
-            foreach (var term in terms)
+            foreach (var term in terms.OrderByDescending(t => t.StartDate))
             {
                 this.Terms.Add(term);
             }
 
             this.SelectedTerm = terms.Current;
             this.UpdateGoStatus();
+        }
+
+        private void RefreshBadges(object badges, Action onCompleted)
+        {
+            this.Status = string.Empty;
+            this.Badges.Clear();
+            foreach (var badge in (Badge[])badges)
+            {
+                this.Badges.Add(badge);
+            }
+
+            if (onCompleted != null) onCompleted();
+        }
+
+        private void RefreshMembers(object members, Action onCompleted)
+        {
+            this.Status = string.Empty;
+            this.Members.Clear();
+            foreach (var member in (Member[])members)
+            {
+                this.Members.Add(new MemberSelection(member));
+            }
+
+            if (onCompleted != null) onCompleted();
         }
 
         private void StartBackgroundWork(Func<Task<object>> onWork, Action<object> onDone)
@@ -259,7 +358,8 @@ namespace Auxano.Osm.AwardProgress
             this.GoCommand.IsEnabled = !this.isBusy
                 && (this.selectedGroup != null)
                 && (this.selectedSection != null)
-                && (this.selectedTerm != null);
+                && (this.selectedTerm != null)
+                && (this.selectedBadge != null);
         }
     }
 }
