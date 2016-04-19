@@ -1,5 +1,6 @@
 ﻿using Auxano.Osm.Api;
 using Newtonsoft.Json;
+using SpreadsheetLight;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -139,8 +140,7 @@ namespace Auxano.Osm.AwardProgress
                 {
                     this.StartBackgroundWork(async () => await this.manager.Term.ListForSectionAsync(value), t =>
                     {
-                        var newTerms = t as TermArray;
-                        this.cachedTerms[value.Id] = newTerms;
+                        this.cachedTerms[value.Id] = t;
                         this.LoadTerms(terms);
                     });
                 }
@@ -194,7 +194,7 @@ namespace Auxano.Osm.AwardProgress
 
         private void AwardProgressGenerated(object obj)
         {
-            throw new NotImplementedException();
+            this.Status = "Finished generating progress reports";
         }
 
         private void DisplayBadges(Action onCompleted = null)
@@ -232,9 +232,77 @@ namespace Auxano.Osm.AwardProgress
             handler.Invoke(this, new PropertyChangedEventArgs(memberName));
         }
 
-        private Task<object> GenerateAwardProgress(Member[] members)
+        private async Task<object> GenerateAwardProgress(Member[] members)
         {
-            throw new NotImplementedException();
+            var progress = await this.manager.Badge.ListProgressForBadgeAsync(this.selectedSection, this.selectedBadge, this.selectedTerm);
+            var indexed = progress.ToDictionary(p => p.Member.Id);
+            var tasks = this.selectedBadge.Tasks
+                .OrderBy(t => t.Module)
+                .ThenBy(t => t.Id)
+                .ToArray();
+            var modules = tasks.GroupBy(t => t.Module)
+                .Select(m => new { Name = m.Key, Gold = m.Count(), Silver = m.Count() / 2 })
+                .OrderBy(m => m.Name)
+                .ToArray();
+            foreach (var member in members)
+            {
+                BadgeProgress memberProgress;
+                if (indexed.TryGetValue(member.Id, out memberProgress))
+                {
+                    var document = new SLDocument();
+                    var row = 0;
+                    document.SetCellValue(++row, 1, this.selectedBadge.Name + " Progress for " + member.FirstName + " " + member.FamilyName);
+                    document.MergeWorksheetCells(1, 1, 1, 4);
+                    document.SetCellValue(++row, 1, "Module");
+                    document.SetCellValue(row, 2, "Task");
+                    document.SetCellValue(row, 3, "Completed");
+                    document.SetCellValue(row, 4, "Details");
+                    document.SetCellValue(row, 5, "Description");
+                    var moduleProgress = modules.ToDictionary(m => m.Name, m => 0);
+
+                    foreach (var task in tasks)
+                    {
+                        document.SetCellValue(++row, 1, task.Module);
+                        document.SetCellValue(row, 2, task.Name);
+                        document.SetCellValue(row, 5, task.Description);
+                        string status;
+                        if (memberProgress.TaskStatus.TryGetValue(task.Id, out status))
+                        {
+                            var completed = !string.IsNullOrEmpty(status);
+                            document.SetCellValue(row, 3, completed ? "Yes" : null);
+                            document.SetCellValue(row, 4, status == "Yes" ? null : status);
+                            if (completed) moduleProgress[task.Module] += 1;
+                        }
+                    }
+
+                    document.SetCellValue(++row, 1, "Module");
+                    document.SetCellValue(row, 2, "# Tasks");
+                    document.SetCellValue(row, 3, "Silver");
+                    document.SetCellValue(row, 4, "Gold");
+                    foreach (var module in modules)
+                    {
+                        document.SetCellValue(++row, 1, module.Name);
+                        document.SetCellValue(row, 2, moduleProgress[module.Name]);
+                        document.SetCellValue(row, 3, moduleProgress[module.Name] >= module.Silver ? "Yes" : null);
+                        document.SetCellValue(row, 4, moduleProgress[module.Name] >= module.Gold ? "Yes" : null);
+                    }
+
+                    for (var loop = 0; loop < 4; loop++) document.AutoFitColumn(loop);
+
+                    var fileName = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                        "OSM",
+                        "AwardProgress",
+                        this.selectedTerm.Name,
+                        member.FamilyName + "," + member.FirstName + "-" + this.selectedBadge.Name + ".xlsx");
+                    var directory = Path.GetDirectoryName(fileName);
+                    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+                    if (File.Exists(fileName)) File.Delete(fileName);
+                    document.SaveAs(fileName);
+                }
+            }
+
+            return null;
         }
 
         private void Go(object arg)
@@ -245,6 +313,7 @@ namespace Auxano.Osm.AwardProgress
                 .ToArray();
             if (selectedMembers.Any())
             {
+                this.Status = "Generating progress reports, please wait...";
                 this.StartBackgroundWork(() => this.GenerateAwardProgress(selectedMembers), this.AwardProgressGenerated);
             }
             else
@@ -253,7 +322,7 @@ namespace Auxano.Osm.AwardProgress
             }
         }
 
-        private async Task<object> LoadBadgesForTerm()
+        private async Task<Badge[]> LoadBadgesForTerm()
         {
             var badges = await this.manager.Badge.ListForSectionAsync(this.selectedSection, 1, this.selectedTerm);
             var loadedBadges = badges.ToArray();
@@ -261,7 +330,7 @@ namespace Auxano.Osm.AwardProgress
             return loadedBadges;
         }
 
-        private async Task<object> LoadMembersForTerm()
+        private async Task<Member[]> LoadMembersForTerm()
         {
             var members = await this.manager.Member.ListForSectionAsync(this.selectedSection, this.selectedTerm);
             var loadedMembers = members.ToArray();
@@ -269,12 +338,10 @@ namespace Auxano.Osm.AwardProgress
             return loadedMembers;
         }
 
-        private void LoadSettings(object output)
+        private void LoadSettings(InitialData data)
         {
             this.Groups.Clear();
             this.SelectedGroup = null;
-
-            var data = output as InitialData;
             if (data == null)
             {
                 this.Status = "Unable to retrieve group and section details";
@@ -301,11 +368,11 @@ namespace Auxano.Osm.AwardProgress
             this.UpdateGoStatus();
         }
 
-        private void RefreshBadges(object badges, Action onCompleted)
+        private void RefreshBadges(Badge[] badges, Action onCompleted)
         {
             this.Status = string.Empty;
             this.Badges.Clear();
-            foreach (var badge in (Badge[])badges)
+            foreach (var badge in badges)
             {
                 this.Badges.Add(badge);
             }
@@ -313,11 +380,11 @@ namespace Auxano.Osm.AwardProgress
             if (onCompleted != null) onCompleted();
         }
 
-        private void RefreshMembers(object members, Action onCompleted)
+        private void RefreshMembers(Member[] members, Action onCompleted)
         {
             this.Status = string.Empty;
             this.Members.Clear();
-            foreach (var member in (Member[])members)
+            foreach (var member in members)
             {
                 this.Members.Add(new MemberSelection(member));
             }
@@ -325,10 +392,10 @@ namespace Auxano.Osm.AwardProgress
             if (onCompleted != null) onCompleted();
         }
 
-        private void StartBackgroundWork(Func<Task<object>> onWork, Action<object> onDone)
+        private void StartBackgroundWork<T>(Func<Task<T>> onWork, Action<T> onDone)
         {
             this.IsBusy = true;
-            object result = null;
+            T result = default(T);
             this.Exceptions.Clear();
             Task.Run(async () =>
             {
