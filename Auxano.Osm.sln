@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxano.Osm.Api", "Auxano.Os
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxano.Osm.DataExtractor", "Auxano.Osm.DataExtractor\Auxano.Osm.DataExtractor.csproj", "{DB984B6A-D17C-43E9-9D81-39AA06170D0B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxano.Osm.AwardProgress", "Auxano.Osm.AwardProgress\Auxano.Osm.AwardProgress.csproj", "{9E8A9377-1144-4CDD-A131-CB718BCBEFA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{DB984B6A-D17C-43E9-9D81-39AA06170D0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB984B6A-D17C-43E9-9D81-39AA06170D0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB984B6A-D17C-43E9-9D81-39AA06170D0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E8A9377-1144-4CDD-A131-CB718BCBEFA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E8A9377-1144-4CDD-A131-CB718BCBEFA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E8A9377-1144-4CDD-A131-CB718BCBEFA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E8A9377-1144-4CDD-A131-CB718BCBEFA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
