@@ -34,15 +34,21 @@ namespace Auxano.Osm.DataExtractor
             document.SetCellValue(1, ++column, "Family Name");
             document.SetCellValue(1, ++column, "First Name");
             document.SetCellValue(1, ++column, "Date of Birth");
-            var orderedBadges = badges.OrderBy(b => b.Category).ThenBy(b => b.Name).ToArray();
+            var orderedBadges = badges.OrderBy(b => b.Category).ThenBy(b => b.Group).ThenBy(b => b.Name).ToArray();
+            var lastGroup = string.Empty;
             foreach (var badge in orderedBadges)
             {
-                document.SetCellValue(1, ++column, badge.Name);
+                document.SetCellValue(2, ++column, badge.Name);
+                if (lastGroup != badge.Group)
+                {
+                    lastGroup = badge.Group;
+                    document.SetCellValue(1, column , lastGroup);
+                }
             }
 
             var dateFormat = document.CreateStyle();
             dateFormat.FormatCode = "d mmm, yyyy";
-            var row = 1;
+            var row = 2;
             var achievements = progressReports
                 .SelectMany(r => r)
                 .GroupBy(p => p.Member.Id)
@@ -52,9 +58,9 @@ namespace Auxano.Osm.DataExtractor
                 column = 0;
                 ++row;
                 document.SetCellValue(row, ++column, member.FamilyName);
-                document.SetCellValue(1, ++column, member.FirstName);
+                document.SetCellValue(row, ++column, member.FirstName);
                 ++column;
-                if (member.WhenBorn.HasValue) document.SetCellValue(1, column, member.WhenBorn.Value);
+                if (member.WhenBorn.HasValue) document.SetCellValue(row, column, member.WhenBorn.Value);
                 document.SetCellStyle(row, column, dateFormat);
                 Dictionary<string, bool> badgesCompleted;
                 if (!achievements.TryGetValue(member.Id, out badgesCompleted)) continue;
@@ -62,7 +68,7 @@ namespace Auxano.Osm.DataExtractor
                 foreach (var badge in orderedBadges)
                 {
                     bool isCompleted;
-                    document.SetCellValue(1, ++column, badgesCompleted.TryGetValue(badge.Id, out isCompleted) && isCompleted ? "Yes" : null);
+                    document.SetCellValue(row, ++column, badgesCompleted.TryGetValue(badge.Id, out isCompleted) && isCompleted ? "Yes" : null);
                 }
             }
 

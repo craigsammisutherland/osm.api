@@ -68,7 +68,7 @@ namespace Auxano.Osm.DataExtractor
             document.SetCellValue(row, ++column, "First Name");
             document.SetCellValue(row, ++column, "Completed");
             document.SetCellValue(row, ++column, "Date Awarded");
-            foreach (var task in badge.Tasks)
+            foreach (var task in badge.Tasks.OrderBy(b => b.Module).ThenBy(b => b.Name))
             {
                 document.SetCellValue(row, ++column, task.Name);
             }
@@ -82,7 +82,7 @@ namespace Auxano.Osm.DataExtractor
             document.SetCellValue(row, ++column, progress.IsCompleted ? "Yes" : "No");
             ++column;
             if (progress.IsAwarded) document.SetCellValue(row, column, progress.WhenAwarded.Value);
-            foreach (var task in badge.Tasks)
+            foreach (var task in badge.Tasks.OrderBy(b => b.Module).ThenBy(b => b.Name))
             {
                 ++column;
                 string status;

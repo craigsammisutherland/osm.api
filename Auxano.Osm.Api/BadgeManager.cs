@@ -133,7 +133,7 @@ namespace Auxano.Osm.Api
             var rows = structure
                 .Skip(1)
                 .SelectMany(s => s.Rows);
-            var tasks = rows.Select(r => new BadgeTask(r.field, r.name, r.tooltip, null));
+            var tasks = rows.Select(r => new BadgeTask(r.field, r.name, r.tooltip, r.module, null));
             return tasks;
         }
 
@@ -169,6 +169,7 @@ namespace Auxano.Osm.Api
         private class StructureDetails
         {
             public string field { get; set; }
+            public string module { get; set; }
             public string name { get; set; }
             public string tooltip { get; set; }
         }
