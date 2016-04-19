@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Auxano.Osm.Api;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,8 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Auxano.Osm.Api;
-using Newtonsoft.Json;
 
 namespace Auxano.Osm.AwardProgress
 {
@@ -52,7 +52,10 @@ namespace Auxano.Osm.AwardProgress
 
         public bool IsBusy
         {
-            get { return this.isBusy; }
+            get
+            {
+                return this.isBusy;
+            }
             set
             {
                 this.isBusy = value;
@@ -65,7 +68,10 @@ namespace Auxano.Osm.AwardProgress
 
         public Group SelectedGroup
         {
-            get { return this.selectedGroup; }
+            get
+            {
+                return this.selectedGroup;
+            }
             set
             {
                 this.selectedGroup = value;
@@ -89,7 +95,10 @@ namespace Auxano.Osm.AwardProgress
 
         public Section SelectedSection
         {
-            get { return this.selectedSection; }
+            get
+            {
+                return this.selectedSection;
+            }
             set
             {
                 this.selectedSection = value;
@@ -121,7 +130,10 @@ namespace Auxano.Osm.AwardProgress
 
         public Term SelectedTerm
         {
-            get { return this.selectedTerm; }
+            get
+            {
+                return this.selectedTerm;
+            }
             set
             {
                 this.selectedTerm = value;
@@ -139,7 +151,10 @@ namespace Auxano.Osm.AwardProgress
 
         public string Status
         {
-            get { return this.status; }
+            get
+            {
+                return this.status;
+            }
             set
             {
                 this.status = value;
@@ -157,6 +172,11 @@ namespace Auxano.Osm.AwardProgress
             return manager;
         }
 
+        private void AwardProgressGenerated(object obj)
+        {
+            throw new NotImplementedException();
+        }
+
         private void FirePropertyChanged([CallerMemberName] string memberName = null)
         {
             if (this.PropertyChanged == null) return;
@@ -164,9 +184,14 @@ namespace Auxano.Osm.AwardProgress
             handler.Invoke(this, new PropertyChangedEventArgs(memberName));
         }
 
-        private void Go(object arg)
+        private Task<object> GenerateAwardProgress()
         {
             throw new NotImplementedException();
+        }
+
+        private void Go(object arg)
+        {
+            this.StartBackgroundWork(this.GenerateAwardProgress, this.AwardProgressGenerated);
         }
 
         private void LoadSettings(object output)
